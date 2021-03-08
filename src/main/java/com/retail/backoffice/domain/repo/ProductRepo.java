@@ -9,7 +9,7 @@ import org.springframework.data.repository.query.Param;
 import com.retail.backoffice.domain.entities.Product;
 
 public interface ProductRepo extends JpaRepository<Product, String> {
-	@Query(value="SELECT * FROM product p WHERE p.id LIKE %:searchString% OR p.name LIKE %:searchString%", 
+	@Query(value="SELECT * FROM product p WHERE p.id LIKE %:searchString% OR p.name LIKE %:searchString% ORDER BY p.id", 
 			nativeQuery = true)
 	List<Product> searchByIdOrName(@Param(value = "searchString") String searchString);
 

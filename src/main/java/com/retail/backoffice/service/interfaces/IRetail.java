@@ -1,6 +1,5 @@
-package com.retail.backoffice.service;
+package com.retail.backoffice.service.interfaces;
 
-import java.time.LocalDate;
 import java.util.List;
 
 import com.retail.backoffice.api.CashDto;

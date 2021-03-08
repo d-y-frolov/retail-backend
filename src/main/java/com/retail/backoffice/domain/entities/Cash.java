@@ -20,6 +20,8 @@ public class Cash {
 	@Id
 	@Column(name="cash_id")
 	int id;
+	@Column(columnDefinition = "varchar(255) default ''")
 	String name;
+	@Column(columnDefinition = "varchar(255) default ''")
 	String info;
 }

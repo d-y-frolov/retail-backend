@@ -1,7 +1,9 @@
 package com.retail.backoffice.controllers;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -16,14 +18,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.retail.backoffice.api.ApiConstants;
 import com.retail.backoffice.api.CashDto;
 import com.retail.backoffice.api.CheckDto;
 import com.retail.backoffice.api.DateSumDto;
+import com.retail.backoffice.api.ErrorResponseDto;
 import com.retail.backoffice.api.GroupDto;
 import com.retail.backoffice.api.ProductDto;
 import com.retail.backoffice.api.ReportCashSaleDto;
 import com.retail.backoffice.api.UnitDto;
-import com.retail.backoffice.service.IRetail;
+import com.retail.backoffice.service.interfaces.IRetail;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,28 +41,62 @@ public class Controller {
 	@Autowired
 	IRetail service;
 
-	@GetMapping(value = "/group")
+	@GetMapping(value = ApiConstants.GROUP_ENDPOINT)
 	List<GroupDto> getGroups() {
 		return service.getAllGroups();
 	}
 
-	@GetMapping(value = "/group/{id}")
-	GroupDto getGroup(@PathVariable String id) {
-		return service.getGroup(id);
+	@GetMapping(value = ApiConstants.GROUP_ID_ENDPOINT)
+	ResponseEntity<?> getGroup(@PathVariable String id, HttpServletRequest request) {
+		GroupDto groupDto = service.getGroup(id);
+		if (groupDto == null) {
+			HttpStatus returnHttpStatus = HttpStatus.CONFLICT;
+			return ResponseEntity.status(returnHttpStatus).body(ErrorResponseDto.builder().timestamp(LocalDateTime.now().toString())
+					.status(returnHttpStatus.value())
+					.message(IRetail.ReturnCodes.GROUP_NOT_FOUND.toString().concat(" : ").concat(id))
+					.error(returnHttpStatus.name())
+					.path(request.getRequestURI())
+					.build());
+		}
+		return ResponseEntity.ok(groupDto);
 	}
 
-	@PostMapping(value = "/group")
-	ResponseEntity<?> addGroup(@RequestBody GroupDto groupDto) {
-		if (service.addGroup(groupDto) == IRetail.ReturnCodes.OK) {
+	@PostMapping(value = ApiConstants.GROUP_ENDPOINT)
+	ResponseEntity<?> addGroup(@RequestBody GroupDto groupDto, HttpServletRequest request) {
+		IRetail.ReturnCodes returnCode = service.addGroup(groupDto); 
+		if ( returnCode == IRetail.ReturnCodes.OK) {
 			return ResponseEntity.ok().build();
 		}
-		return ResponseEntity.badRequest().build();
+		HttpStatus returnHttpStatus = HttpStatus.BAD_REQUEST;
+		if ( returnCode == IRetail.ReturnCodes.GROUP_ALREADY_EXISTS) {
+			returnHttpStatus = HttpStatus.CONFLICT;
+			return ResponseEntity.status(returnHttpStatus).body(
+					ErrorResponseDto.builder()
+					.timestamp(LocalDateTime.now().toString())
+					.status(returnHttpStatus.value())
+					.error(returnHttpStatus.name())
+					.message(String.format("%s : %s", 
+							returnCode.toString(), groupDto.getId() ))
+					.path(request.getRequestURI())
+					.build()
+					);
+		}
+		return ResponseEntity.status(returnHttpStatus).body(
+				ErrorResponseDto.builder()
+				.timestamp(LocalDateTime.now().toString())
+				.status(returnHttpStatus.value())
+				.error(returnHttpStatus.name())
+				.message(String.format("%s :%s", 
+						returnCode.toString(), groupDto.toString() ))
+				.path(request.getRequestURI())
+				.build()
+				);
 	}
 
 	/***************************************************
 	 * PRODUCTS
 	 **************************************************/
-	@GetMapping(value = "/product")
+	@GetMapping(value = ApiConstants.PRODUCT_ENDPOINT)
 	List<ProductDto> getProducts(@RequestParam(name="search", required = false) String searchString) {
 		if (searchString==null) {
 			return service.getAllProducts();
@@ -66,12 +104,24 @@ public class Controller {
 		return service.getSearchedProducts(searchString);
 	}
 
-	@GetMapping(value = "/product/{id}")
-	ProductDto getProduct(@PathVariable String id) {
-		return service.getProduct(id);
+	@GetMapping(value = ApiConstants.PRODUCT_ID_ENDPOINT)
+	ResponseEntity<?> getProduct(@PathVariable String id, HttpServletRequest request) {
+		ProductDto product = service.getProduct(id);
+		if (product==null) {
+			HttpStatus returnStatus = HttpStatus.CONFLICT; 
+			return ResponseEntity.status(returnStatus).body(
+					ErrorResponseDto.builder()
+					.timestamp(LocalDateTime.now().toString())
+					.status(returnStatus.value())
+					.error(returnStatus.name())
+					.message(IRetail.ReturnCodes.PRODUCT_ID_NOT_FOUND.toString().concat(" : ").concat(id))
+					.path(request.getRequestURI())
+					.build());
+		}
+		return ResponseEntity.ok(product);
 	}
 
-	@PostMapping(value = "/product")
+	@PostMapping(value = ApiConstants.PRODUCT_ENDPOINT)
 	ResponseEntity<?> addProduct(@RequestBody ProductDto productDto) {
 		IRetail.ReturnCodes returnCode = service.addProduct(productDto);
 		if (returnCode == IRetail.ReturnCodes.OK) {
@@ -82,7 +132,7 @@ public class Controller {
 		return new ResponseEntity<String>(returnCode.toString(), HttpStatus.CONFLICT);
 	}
 
-	@PutMapping(value = "/product")
+	@PutMapping(value = ApiConstants.PRODUCT_ENDPOINT)
 	ResponseEntity<?> updateProduct(@RequestBody ProductDto productDto) {
 		IRetail.ReturnCodes returnCode = service.updateProduct(productDto);
 		if (returnCode == IRetail.ReturnCodes.OK) {
@@ -94,7 +144,7 @@ public class Controller {
 		return new ResponseEntity<String>(returnCode.toString(), HttpStatus.CONFLICT);
 	}
 
-	@DeleteMapping(value = "/product/{id}")
+	@DeleteMapping(value = ApiConstants.PRODUCT_ID_ENDPOINT)
 	ResponseEntity<?> removeProduct(@PathVariable String id) {
 		IRetail.ReturnCodes returnCode = IRetail.ReturnCodes.OK;
 		try{
@@ -111,17 +161,17 @@ public class Controller {
 	/***************************************************
 	 * UNITS
 	 **************************************************/
-	@GetMapping(value = "/unit")
+	@GetMapping(value = ApiConstants.UNIT_ENDPOINT)
 	List<UnitDto> getUnits() {
 		return service.getAllUnits();
 	}
 
-	@GetMapping(value = "/unit/{id}")
+	@GetMapping(value = ApiConstants.UNIT_ID_ENDPOINT)
 	UnitDto getUnit(@PathVariable String id) {
 		return service.getUnit(id);
 	}
 
-	@PostMapping(value = "/unit")
+	@PostMapping(value = ApiConstants.UNIT_ENDPOINT)
 	ResponseEntity<?> addUnit(@RequestBody UnitDto unitDto) {
 		if (service.addUnit(unitDto) == IRetail.ReturnCodes.OK) {
 			return ResponseEntity.ok().build();
@@ -132,17 +182,17 @@ public class Controller {
 	/***************************************************
 	 * CASHES
 	 **************************************************/
-	@GetMapping(value = "/cash-register")
+	@GetMapping(value = ApiConstants.CASH_ENDPOINT)
 	List<CashDto> getCashes() {
 		return service.getAllCacheRegisters();
 	}
 
-	@GetMapping(value = "/cash-register/{id}")
+	@GetMapping(value = ApiConstants.CASH_ID_ENDPOINT)
 	CashDto getCacheRegister(@PathVariable int id) {
 		return service.getCacheRegister(id);
 	}
 
-	@PostMapping(value = "/cash-register")
+	@PostMapping(value = ApiConstants.CASH_ENDPOINT)
 	ResponseEntity<?> addCacheRegister(@RequestBody CashDto cashDto) {
 		if (service.addCacheRegister(cashDto) == IRetail.ReturnCodes.OK) {
 			return ResponseEntity.ok().build();
@@ -153,17 +203,17 @@ public class Controller {
 	/***************************************************
 	 * CHECKS
 	 **************************************************/
-	@GetMapping(value = "/check")
+	@GetMapping(value = ApiConstants.CHECK_ENDPOINT)
 	List<CheckDto> getChecks() {
 		return service.getAllChecks();
 	}
 
-	@GetMapping(value = "/check/{id}")
+	@GetMapping(value = ApiConstants.CHECK_ID_ENDPOINT)
 	CheckDto getCheck(@PathVariable String id) {
 		return service.getCheck(id);
 	}
 
-	@PostMapping(value = "/check")
+	@PostMapping(value = ApiConstants.CHECK_ENDPOINT)
 	ResponseEntity<?> addCheck(@RequestBody CheckDto checkDto) {
 		log.debug("checkDto: {}", checkDto);
 		IRetail.ReturnCodes result = service.addCheck(checkDto);
@@ -176,12 +226,12 @@ public class Controller {
 	/***************************************************
 	 * REPORTS
 	 **************************************************/
-	@GetMapping(value="/report/group-sales")
+	@GetMapping(value=ApiConstants.REPORT_GROUP_SALES_ENDPOINT)
 	List<ReportCashSaleDto> getCashSalesReport(@RequestParam(name="from") String stringFrom, 
 			@RequestParam (name="to")String stringTo){
 		return service.getReportCashSale(stringFrom, stringTo);
 	}
-	@GetMapping(value="/report/sales")
+	@GetMapping(value=ApiConstants.REPORT_SALES_ENDPOINT)
 	List<DateSumDto> getSalesReport(@RequestParam(name="from") String stringFrom, 
 			@RequestParam (name="to")String stringTo){
 		return service.getReportSalesSumDto(stringFrom, stringTo);

@@ -1,7 +1,6 @@
-package com.retail.backoffice.service;
+package com.retail.backoffice.service.impl;
 
 import java.security.InvalidParameterException;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,7 +18,6 @@ import com.retail.backoffice.api.GroupDto;
 import com.retail.backoffice.api.ProductDto;
 import com.retail.backoffice.api.ReportCashSaleDto;
 import com.retail.backoffice.api.UnitDto;
-import com.retail.backoffice.controllers.Controller;
 import com.retail.backoffice.domain.entities.Cash;
 import com.retail.backoffice.domain.entities.CheckDetail;
 import com.retail.backoffice.domain.entities.Checks;
@@ -34,6 +32,7 @@ import com.retail.backoffice.domain.repo.GroupRepo;
 import com.retail.backoffice.domain.repo.ProductRepo;
 import com.retail.backoffice.domain.repo.SalesDateSumRepo;
 import com.retail.backoffice.domain.repo.UnitRepo;
+import com.retail.backoffice.service.interfaces.IRetail;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -81,6 +80,9 @@ public class RetailService implements IRetail {
 	@Transactional
 	@Override
 	public ReturnCodes addGroup(GroupDto groupDto) {
+		if (groupDto == null || groupDto.getId()==null || groupDto.getId().isEmpty()) {
+			return ReturnCodes.INPUT_OBJECT_IS_NULL;
+		}
 		if (groupRepo.existsById(groupDto.getId())) {
 			return ReturnCodes.GROUP_ALREADY_EXISTS;
 		}
@@ -312,8 +314,12 @@ public class RetailService implements IRetail {
 	}
 
 	private CheckDto mapCheckToCheckDto(Checks check) {
-		return CheckDto.builder().id(check.getId()).cash(mapCashToCashDto(check.getCash()))
-				.dateTime(check.getDateTime()).details(mapCashDetailsToCashDetailDto(check.getDetails())).build();
+		return CheckDto.builder()
+				.id(check.getId())
+				.cash(mapCashToCashDto(check.getCash()))
+				.dateTime(check.getDateTime())
+				.sum(check.getSum())
+				.details(mapCashDetailsToCashDetailDto(check.getDetails())).build();
 	}
 
 	private List<CheckDetailDto> mapCashDetailsToCashDetailDto(List<CheckDetail> cashDetails) {

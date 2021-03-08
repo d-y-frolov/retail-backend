@@ -1,5 +1,6 @@
 package com.retail.backoffice.domain.entities;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -18,8 +19,9 @@ import lombok.NoArgsConstructor;
 @Builder
 @AllArgsConstructor
 public class Product {
-	@Id()
+	@Id
 	private String id;
+	@Column(columnDefinition = "varchar(255) default ''")
 	private String name;
 
 	@ManyToOne
@@ -33,7 +35,9 @@ public class Product {
 	private Double tax;
 	private Double price;
 	private Double remainder;
-
+	
+	@Column(columnDefinition = "varchar(255) default ''")
 	String manufacturer;
+	@Column(columnDefinition = "varchar(255) default ''")
 	String country;
 }

@@ -13,7 +13,7 @@ public interface ProductRepo extends JpaRepository<Product, String> {
 			nativeQuery = true)
 	List<Product> searchByIdOrName(@Param(value = "searchString") String searchString);
 
-	@Query(value="SELECT p FROM Product p WHERE UPPER(p.name) LIKE %:searchString%", 
+	@Query(value="SELECT p FROM Product p WHERE UPPER(p.name) LIKE %:searchString% ORDER BY p.id", 
 			nativeQuery = false)
 	List<Product> searchByName(@Param(value = "searchString") String searchString);
 

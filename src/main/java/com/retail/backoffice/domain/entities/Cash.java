@@ -20,8 +20,15 @@ public class Cash {
 	@Id
 	@Column(name="cash_id")
 	int id;
-	@Column(columnDefinition = "varchar(255) default ''")
-	String name;
-	@Column(columnDefinition = "varchar(255) default ''")
-	String info;
+	@Column(name="name", columnDefinition = "varchar(255) default ''")
+	@Builder.Default
+	String name="";
+	@Column(name="info", columnDefinition = "varchar(255) default ''")
+	@Builder.Default
+	String info="";
+	@Column(name="last_check_number")
+	int lastCheckNumber;
+	@Column(name="check_prefix")
+	@Builder.Default
+	private String checkPrefix = "";
 }

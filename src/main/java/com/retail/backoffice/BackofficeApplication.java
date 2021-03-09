@@ -3,8 +3,6 @@ package com.retail.backoffice;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -16,7 +14,6 @@ import com.retail.backoffice.api.ProductDto;
 import com.retail.backoffice.api.UnitDto;
 import com.retail.backoffice.service.interfaces.IRetail;
 
-import ch.qos.logback.classic.net.SyslogAppender;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -28,8 +25,8 @@ public class BackofficeApplication {
 		log.debug("DB Initial filling");
 		IRetail service = ctx.getBean(IRetail.class);
 		CashDto[] cashes = {
-				CashDto.builder().id(1).name("Cash 1").info("Info cash 1").build(),
-				CashDto.builder().id(2).name("Cash 2").info("Info cash 2").build()
+				CashDto.builder().id(1).name("Cash 1").info("Info cash 1").checkPrefix("C1").lastCheckNumber(100).build(),
+				CashDto.builder().id(2).name("Cash 2").info("Info cash 2").checkPrefix("CSH").build()
 		};
 		service.addCacheRegister(cashes[0]);
 		service.addCacheRegister(cashes[1]);

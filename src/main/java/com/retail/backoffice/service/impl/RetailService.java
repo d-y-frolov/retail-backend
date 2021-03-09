@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.retail.backoffice.api.CashDto;
@@ -53,6 +54,8 @@ public class RetailService implements IRetail {
 	DetailRepo detailRepo;
 	@Autowired
 	SalesDateSumRepo salesDateSumRepo;
+	@Value("${check_id_format:%s%03d%010d}")
+	String checkIdFormat;
 
 	/*************************************
 	 * GROUPS
@@ -264,7 +267,9 @@ public class RetailService implements IRetail {
 	}
 
 	private CashDto mapCashToCashDto(Cash cash) {
-		return CashDto.builder().id(cash.getId()).name(cash.getName()).info(cash.getInfo()).build();
+		return CashDto.builder().id(cash.getId()).name(cash.getName())
+				.info(cash.getInfo()).lastCheckNumber(cash.getLastCheckNumber())
+				.checkPrefix(cash.getCheckPrefix()).build();
 	}
 
 	@Override
@@ -290,7 +295,9 @@ public class RetailService implements IRetail {
 	}
 
 	private Cash mapCashDtoToCash(CashDto cashDto) {
-		return Cash.builder().id(cashDto.getId()).name(cashDto.getName()).info(cashDto.getInfo()).build();
+		return Cash.builder().id(cashDto.getId()).name(cashDto.getName())
+				.info(cashDto.getInfo()).lastCheckNumber(cashDto.getLastCheckNumber())
+				.checkPrefix(cashDto.getCheckPrefix()).build();
 	}
 
 	@Override
@@ -350,18 +357,29 @@ public class RetailService implements IRetail {
 		if (checkDto == null || checkDto.getCash() == null || checkDto.getDetails() == null) {
 			return ReturnCodes.INPUT_OBJECT_IS_NULL;
 		}
-		if (checkRepo.existsById(checkDto.getId())) {
-			return ReturnCodes.CHECK_ID_ALREADY_EXISTS;
-		}
-		if (!cashRepo.existsById(checkDto.getCash().getId())) {
+		Cash cash = cashRepo.findById(checkDto.getCash().getId()).orElse(null);
+		if (cash == null) {
 			log.debug("CASH_ID: {}", checkDto.getCash().getId() );
 			return ReturnCodes.CASH_NOT_FOUND;
+		}
+		String checkId = getCheckIdAndSetLastCheckNumber(cash);
+		checkDto.setId(checkId);
+		if (checkRepo.existsById(checkDto.getId())) {
+			return ReturnCodes.CHECK_ID_ALREADY_EXISTS;
 		}
 		Checks check = checkRepo.save(mapCheckDtoToCheck(checkDto));
 		List<CheckDetail> details = mapListCheckDetailToListDetail(checkDto.getDetails(), check);
 		changeProductRemainders(details, false);
 		detailRepo.saveAll(details);
 		return ReturnCodes.OK;
+	}
+
+	private String getCheckIdAndSetLastCheckNumber(Cash cash) {
+		int checkNumber = cash.getLastCheckNumber() + 1;
+		cash.setLastCheckNumber(checkNumber);
+		cashRepo.save(cash);
+		log.debug("CASH_ID: {}, LAST_CHECK_NUMBER: {}", cash.getId(), cash.getLastCheckNumber());
+		return String.format(checkIdFormat, cash.getCheckPrefix(), cash.getId(), checkNumber);
 	}
 
 	private void changeProductRemainders(List<CheckDetail> details, boolean isIncreaseRemainder) {

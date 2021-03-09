@@ -11,6 +11,11 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CashDto {
 	private int id;
-	private String name;
-	private String info;
+	@Builder.Default
+	private String name="";
+	@Builder.Default
+	private String info="";
+	private int lastCheckNumber;
+	@Builder.Default
+	private String checkPrefix = "";
 }

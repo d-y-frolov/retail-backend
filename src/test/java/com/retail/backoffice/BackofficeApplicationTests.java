@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.jupiter.api.BeforeAll;
@@ -25,6 +26,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
 import com.retail.backoffice.api.CashDto;
+import com.retail.backoffice.api.CheckDetailDto;
+import com.retail.backoffice.api.CheckDto;
 import com.retail.backoffice.api.ErrorResponseDto;
 import com.retail.backoffice.api.GroupDto;
 import com.retail.backoffice.api.ProductDto;
@@ -43,11 +46,14 @@ class BackofficeApplicationTests {
 	private TestRestTemplate restTemplate;
 
 	private static final String GROUP_ID = "GROUP_ID";
+	private static final String GROUP_ID_NOT_EXISTS = "GROUP_ID_NOT_EXISTS";
 	private static final String GROUP_NAME = "GROUP_NAME";
-	private static final String UNIT_ID = "ID_UNIT";
+	private static final String UNIT_ID = "UNIT_ID";
+	private static final String UNIT_ID_NOT_EXISTS = "UNIT_ID_NOT_EXISTS";
 	private static final String UNIT_NAME = "UNIT_NAME";
 	private static final boolean UNIT_PIECE = true;
 	private static final String PRODUCT_ID = "PRODUCT_ID";
+	private static final String PRODUCT_ID_NOT_EXISTS = "PRODUCT_ID_WRONG";
 	private static final String PRODUCT_ID_SEARCH_STRING = "_I";
 	private static final String PRODUCT_NAME = "PRODUCT_NAME";
 	private static final String PRODUCT_NAME_SEARCH_STRING = "CT_NA";
@@ -57,7 +63,7 @@ class BackofficeApplicationTests {
 	private static final double PRODUCT_REMAINDER = 10.;
 	private static final double PRODUCT_PRICE = 100.99;
 	private static final double PRODUCT_TAX = 17.;
-	private static final String CHECK_ID = "CHECK_ID";
+	private static final String CHECK_ID_WRONG = "CHECK_ID_WRONG";
 	private static final LocalDateTime CHECK_DATETIME = LocalDateTime.now();
 	private static final double CHECK_PRICE = PRODUCT_PRICE;
 	private static final double CHECK_QUANTITY = 1;
@@ -85,9 +91,12 @@ class BackofficeApplicationTests {
 	private UnitDto unitDto; 
 	private ProductDto productDto; 
 	private CashDto cashDto; 
+	private CheckDto checkDto; 
+	private CheckDetailDto checkDetailDto; 
 	
 	@BeforeAll
 	void beforeAll() {
+		
 		assertNotNull(controller);		
 		
 		groupURL = String.format("%s:%d%s", BASE_URL, port, GROUP_ENDPOINT); 
@@ -106,6 +115,12 @@ class BackofficeApplicationTests {
 				.price(PRODUCT_PRICE).remainder(PRODUCT_REMAINDER).tax(PRODUCT_TAX)
 				.manufacturer(PRODUCT_MANUFACTURER).country(PRODUCT_COUNTRY).build();
 		cashDto = CashDto.builder().id(CASH_ID).name(CASH_NAME).info(CASH_INFO).build();
+		checkDetailDto = CheckDetailDto.builder().productDto(productDto).price(CHECK_PRICE)
+				.quantity(CHECK_QUANTITY).sum(CHECK_PRICE * CHECK_QUANTITY).build();
+		List<CheckDetailDto> details = new ArrayList<>();
+		details.add(checkDetailDto);
+		checkDto = CheckDto.builder().cash(cashDto).dateTime(CHECK_DATETIME)
+				.details(details).sum(CHECK_PRICE * CHECK_QUANTITY).build();
 		
 		ResponseEntity <?> response = restTemplate.exchange(groupURL,
 				HttpMethod.POST, new HttpEntity<GroupDto>(groupDto ),
@@ -129,6 +144,12 @@ class BackofficeApplicationTests {
 				Object.class
 				);
 		assertEquals(HttpStatus.OK, response.getStatusCode());
+
+		response = restTemplate.exchange(checkURL,
+				HttpMethod.POST, new HttpEntity<CheckDto>(checkDto ),
+				Object.class
+				);
+		assertEquals(HttpStatus.OK, response.getStatusCode());
 	}
 	
 	@BeforeEach
@@ -140,6 +161,9 @@ class BackofficeApplicationTests {
 //		assertNotNull(controller);		
 //	}
 	
+	/****
+	 *    PRODUCT GROUPS
+	 */
 	@Test
 	void testGroupsRestRequests() {
 		// get all groups
@@ -178,8 +202,10 @@ class BackofficeApplicationTests {
 		assertTrue( response.getBody().getMessage()
 				.contains(IRetail.ReturnCodes.INPUT_OBJECT_IS_NULL.toString()) );
 	}
-	
-	
+
+	/*****
+	 *	 UNITS
+	 */
 	@Test
 	void testUnitsRestRequests() {
 		// get all units
@@ -202,18 +228,20 @@ class BackofficeApplicationTests {
 				Object.class);
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 	}
-	
 
+	/**
+	 *   PRODUCTS 
+	 */
 	@Test
 	void testProductsRestRequests() {
 		// Get all products
 		ResponseEntity <List<ProductDto>> productResponse = restTemplate.exchange(productURL,
 			HttpMethod.GET, null,
 			new ParameterizedTypeReference<List<ProductDto>>(){});
-		assertTrue(productResponse.getBody().contains(productDto));
+		assertTrue(productResponse.getBody().get(0).getId().equals(PRODUCT_ID));
 		
 		// Get products by search string
-		// CASE : search string is part of the id (barcode)
+		// CASE : search string is part of the id (bar-code)
 		productResponse = restTemplate.exchange(productURL+"?search="+PRODUCT_ID_SEARCH_STRING,
 			HttpMethod.GET, null,
 			new ParameterizedTypeReference<List<ProductDto>>(){});
@@ -227,28 +255,81 @@ class BackofficeApplicationTests {
 			productResponse.getBody().forEach(p->
 				assertTrue( p.getId().contains(PRODUCT_ID_SEARCH_STRING)|| 
 				 p.getName().contains(PRODUCT_ID_SEARCH_STRING)) );
-		// CASE : search string is not part of the id (barcode) and is not part of the name   
+		// CASE : search string is not part of the id (bar-code) and is not part of the name   
 		productResponse = restTemplate.exchange(productURL+"?search="+PRODUCT_ID_NAME_WRONG_SEARCH_STRING,
 				HttpMethod.GET, null,
 				new ParameterizedTypeReference<List<ProductDto>>(){});
 		assertEquals(0, productResponse.getBody().size());
 		
-		// get product by id
 		
+		// get product by id
+		//CASE : the product exists
+		ProductDto productDtoResonse = restTemplate.getForObject(productURL+"/"+PRODUCT_ID, 
+				ProductDto.class);
+		assertEquals(productDto.getId(), productDtoResonse.getId());
+		//CASE : the product does not exist
+		ErrorResponseDto errorResonseDto = restTemplate.getForObject(productURL+"/"+PRODUCT_ID_NOT_EXISTS, 
+				ErrorResponseDto.class);
+		assertNotNull(errorResonseDto);
+		assertEquals(HttpStatus.CONFLICT.value(), errorResonseDto.getStatus());
+		assertTrue(errorResonseDto.getMessage().contains(IRetail.ReturnCodes.PRODUCT_ID_NOT_FOUND.toString()));
+		assertTrue(errorResonseDto.getMessage().contains(PRODUCT_ID_NOT_EXISTS));
+
+		//add product
+		// CASE add product with existing bar-code (id)
+		errorResonseDto = restTemplate.postForObject(productURL,productDto,ErrorResponseDto.class);
+		assertNotNull(errorResonseDto);
+		assertEquals(HttpStatus.CONFLICT.value(), errorResonseDto.getStatus());
+		assertTrue(errorResonseDto.getMessage().contains(IRetail.ReturnCodes.PRODUCT_ID_ALREADY_EXISTS.toString()));
+		//CASE add product with not existing groupId
+		ProductDto productDtoWrongGroupId = ProductDto.builder()
+				.id(PRODUCT_ID_NOT_EXISTS)
+				.name(PRODUCT_NAME)
+				.groupId(GROUP_ID_NOT_EXISTS)
+				.unitId(UNIT_ID)
+				.build();
+		errorResonseDto = restTemplate.postForObject(productURL,productDtoWrongGroupId,ErrorResponseDto.class);
+		assertNotNull(errorResonseDto);
+		assertEquals(HttpStatus.CONFLICT.value(), errorResonseDto.getStatus());
+		assertTrue(errorResonseDto.getMessage().contains(IRetail.ReturnCodes.GROUP_NOT_FOUND.toString()));
+		//CASE add product with not existing unitId
+		ProductDto productDtoWrongUnitId = ProductDto.builder()
+				.id(PRODUCT_ID_NOT_EXISTS)
+				.name(PRODUCT_NAME)
+				.groupId(GROUP_ID)
+				.unitId(UNIT_ID_NOT_EXISTS)
+				.build();
+		errorResonseDto = restTemplate.postForObject(productURL,productDtoWrongUnitId,ErrorResponseDto.class);
+		assertNotNull(errorResonseDto);
+		assertEquals(HttpStatus.CONFLICT.value(), errorResonseDto.getStatus());
+		assertTrue(errorResonseDto.getMessage().contains(IRetail.ReturnCodes.UNIT_NOT_FOUND.toString()));
+		//CASE add product without bar-code(id)
+		ProductDto productDtoWithoutId = ProductDto.builder()
+				.name(PRODUCT_NAME)
+				.groupId(GROUP_ID)
+				.unitId(UNIT_ID)
+				.build();
+		ResponseEntity<?> response = restTemplate.exchange(productURL,
+				HttpMethod.POST, new HttpEntity<ProductDto>(productDtoWithoutId ),
+				Object.class);
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 	}
 	
 	
+	/*****
+	 *    CASH REGISTERS
+	 */
 	@Test
 	void testCashesRestRequests() {
 		// get all cash registers
 		ResponseEntity <List<CashDto>> cashResponse = restTemplate.exchange(cashURL,
 		HttpMethod.GET, null,
 		new ParameterizedTypeReference<List<CashDto>>(){});
-		assertTrue(cashResponse.getBody().contains(cashDto));
+		assertTrue(cashResponse.getBody().get(0).getId()==CASH_ID);
 		
 		//get an existing cash register
 		CashDto cash = restTemplate.getForObject(cashURL+"/"+CASH_ID, CashDto.class);
-		assertEquals(cashDto, cash);
+		assertEquals(cashDto.getId(), cash.getId());
 
 		// get a not existing cash register
 		cash = restTemplate.getForObject(unitURL+"/"+CASH_ID+"_", CashDto.class);
@@ -260,9 +341,47 @@ class BackofficeApplicationTests {
 				Object.class);
 		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 	}
+	
+	
+	
+	/**********
+	 *    CHECKS
+	 */
 	@Test
 	void testChecksRestRequests() {
-		System.out.println("**************Checks:");
+		//get all checks
+		ResponseEntity<List<CheckDto>> checksResponse = restTemplate.exchange(checkURL, HttpMethod.GET,null, new ParameterizedTypeReference<List<CheckDto>>(){});
+		assertNotNull(checksResponse);
+		assertEquals(1, checksResponse.getBody().size());
+		assertEquals(cashDto.getId(), checksResponse.getBody().get(0).getCash().getId());
+		assertEquals(1, checksResponse.getBody().get(0).getDetails().size());
+		assertTrue(checksResponse.getBody().get(0).getDetails().get(0).getProductDto().getId().equals(productDto.getId()));
+		String checkId = checksResponse.getBody().get(0).getId();
+		
+		//get an existing check
+		CheckDto check = restTemplate.getForObject(checkURL+"/"+checkId, CheckDto.class);
+		assertNotNull(check);
+		assertEquals(checkId, check.getId());
+
+		//get not existing check
+		ErrorResponseDto errorResponseDto = restTemplate.getForObject(checkURL+"/"+CHECK_ID_WRONG, ErrorResponseDto.class);
+		assertNotNull(errorResponseDto);
+		assertTrue(errorResponseDto.getMessage().contains(IRetail.ReturnCodes.CHECK_ID_NOT_FOUND.toString()));
+		
+		// try to add check with not existing CASH_ID
+		CheckDto checkDtoWrong = CheckDto.builder().dateTime(CHECK_DATETIME).cash(null).details(checkDto.getDetails()).sum(checkDto.getSum()).build(); 
+		ResponseEntity<?> response = restTemplate.exchange(checkURL,
+				HttpMethod.POST, new HttpEntity<CheckDto>(checkDtoWrong ),
+				Object.class
+				);
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+		// try to add check with not existing details
+		checkDtoWrong = CheckDto.builder().dateTime(CHECK_DATETIME).cash(cashDto).details(null).build(); 
+		response = restTemplate.exchange(checkURL,
+				HttpMethod.POST, new HttpEntity<CheckDto>(checkDtoWrong ),
+				Object.class
+				);
+		assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
 	}
 
 }

@@ -1,7 +1,5 @@
 package com.retail.backoffice.api;
 
-import javax.persistence.Id;
-
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,9 +9,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class GroupDto {
-	@Id
-	String id;
+public class ResponseDto {
 	@Builder.Default
-	String name="";
+	String type = "response";
+	@Builder.Default
+	String payload = "";
 }

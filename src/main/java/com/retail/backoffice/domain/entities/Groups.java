@@ -20,5 +20,6 @@ public class Groups {
 	@Id
 	@Column(name="group_id")
 	String id;
-	String name;
+	@Builder.Default
+	String name="";
 }

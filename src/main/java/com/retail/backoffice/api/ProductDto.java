@@ -11,7 +11,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ProductDto {
 	String id;
-	String name;
+	@Builder.Default
+	String name="";
 	String groupId;
 	String groupName;
 	String unitId;
@@ -20,6 +21,8 @@ public class ProductDto {
 	Double tax;
 	Double price;
 	Double remainder;
-	String manufacturer;
-	String country;
+	@Builder.Default
+	String manufacturer="";
+	@Builder.Default
+	String country="";
 }

@@ -20,10 +20,10 @@ public class Cash {
 	@Id
 	@Column(name="cash_id")
 	int id;
-	@Column(name="name", columnDefinition = "varchar(255) default ''")
+//	@Column(name="name", columnDefinition = "varchar(255) default ''")
 	@Builder.Default
 	String name="";
-	@Column(name="info", columnDefinition = "varchar(255) default ''")
+//	@Column(name="info", columnDefinition = "varchar(255) default ''")
 	@Builder.Default
 	String info="";
 	@Column(name="last_check_number")

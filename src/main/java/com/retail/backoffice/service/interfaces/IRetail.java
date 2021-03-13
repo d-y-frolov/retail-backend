@@ -5,6 +5,7 @@ import java.util.List;
 import com.retail.backoffice.api.CashDto;
 import com.retail.backoffice.api.CheckDto;
 import com.retail.backoffice.api.DateSumDto;
+import com.retail.backoffice.api.DtoWithRetCode;
 import com.retail.backoffice.api.GroupDto;
 import com.retail.backoffice.api.ProductDto;
 import com.retail.backoffice.api.ReportCashSaleDto;
@@ -14,7 +15,7 @@ public interface IRetail {
 	enum ReturnCodes {
 		OK, INPUT_OBJECT_IS_NULL, CANNOT_BE_REMOVED_DEPENDENCIES_EXIST, 
 		GROUP_NOT_FOUND, GROUP_ALREADY_EXISTS, 
-		PRODUCT_ID_NOT_FOUND, PRODUCT_ID_ALREADY_EXISTS, 
+		PRODUCT_ID_NOT_FOUND, PRODUCT_ID_ALREADY_EXISTS, PRODUCT_ID_EMPTY, 
 		UNIT_NOT_FOUND, UNIT_ALREADY_EXISTS, 
 		CASH_NOT_FOUND, CASH_ALREADY_EXISTS, 
 		CHECK_ID_NOT_FOUND, CHECK_ID_ALREADY_EXISTS
@@ -81,7 +82,8 @@ public interface IRetail {
 
 	CheckDto getCheck(String id);
 
-	ReturnCodes addCheck(CheckDto checkDto);
+//	ReturnCodes addCheck(CheckDto checkDto);
+	DtoWithRetCode<String> addCheck(CheckDto checkDto);
 
 	ReturnCodes updateCheck(CheckDto checkDto);
 	

@@ -24,7 +24,9 @@ public class Unit {
 	@Id
 	@Column(name = "unit_id")
 	private String id;
-	private String name;
+	@Builder.Default
+	private String name="";
 	@Column(name="is_piece")
+	@Builder.Default
 	private boolean pieceUnit = true;  
 }

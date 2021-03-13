@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UnitDto {
 	String id;
-	String name;
+	@Builder.Default
+	String name="";
 	boolean pieceUnit;
 }

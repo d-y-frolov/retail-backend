@@ -1,6 +1,5 @@
 package com.retail.backoffice.controllers;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
@@ -22,12 +21,15 @@ import com.retail.backoffice.api.ApiConstants;
 import com.retail.backoffice.api.CashDto;
 import com.retail.backoffice.api.CheckDto;
 import com.retail.backoffice.api.DateSumDto;
+import com.retail.backoffice.api.DtoWithRetCode;
 import com.retail.backoffice.api.ErrorResponseDto;
 import com.retail.backoffice.api.GroupDto;
 import com.retail.backoffice.api.ProductDto;
 import com.retail.backoffice.api.ReportCashSaleDto;
+import com.retail.backoffice.api.ResponseDto;
 import com.retail.backoffice.api.UnitDto;
 import com.retail.backoffice.service.interfaces.IRetail;
+import com.retail.backoffice.service.interfaces.IRetail.ReturnCodes;
 
 import lombok.extern.slf4j.Slf4j;
 
@@ -51,7 +53,7 @@ public class Controller {
 		GroupDto groupDto = service.getGroup(id);
 		if (groupDto == null) {
 			HttpStatus returnHttpStatus = HttpStatus.CONFLICT;
-			return ResponseEntity.status(returnHttpStatus).body(ErrorResponseDto.builder().timestamp(LocalDateTime.now().toString())
+			return ResponseEntity.status(returnHttpStatus).body(ErrorResponseDto.builder()
 					.status(returnHttpStatus.value())
 					.message(IRetail.ReturnCodes.GROUP_NOT_FOUND.toString().concat(" : ").concat(id))
 					.error(returnHttpStatus.name())
@@ -72,7 +74,6 @@ public class Controller {
 			returnHttpStatus = HttpStatus.CONFLICT;
 			return ResponseEntity.status(returnHttpStatus).body(
 					ErrorResponseDto.builder()
-					.timestamp(LocalDateTime.now().toString())
 					.status(returnHttpStatus.value())
 					.error(returnHttpStatus.name())
 					.message(String.format("%s : %s", 
@@ -83,7 +84,6 @@ public class Controller {
 		}
 		return ResponseEntity.status(returnHttpStatus).body(
 				ErrorResponseDto.builder()
-				.timestamp(LocalDateTime.now().toString())
 				.status(returnHttpStatus.value())
 				.error(returnHttpStatus.name())
 				.message(String.format("%s :%s", 
@@ -111,7 +111,6 @@ public class Controller {
 			HttpStatus returnStatus = HttpStatus.CONFLICT; 
 			return ResponseEntity.status(returnStatus).body(
 					ErrorResponseDto.builder()
-					.timestamp(LocalDateTime.now().toString())
 					.status(returnStatus.value())
 					.error(returnStatus.name())
 					.message(IRetail.ReturnCodes.PRODUCT_ID_NOT_FOUND.toString().concat(" : ").concat(id))
@@ -122,14 +121,21 @@ public class Controller {
 	}
 
 	@PostMapping(value = ApiConstants.PRODUCT_ENDPOINT)
-	ResponseEntity<?> addProduct(@RequestBody ProductDto productDto) {
+	ResponseEntity<?> addProduct(@RequestBody ProductDto productDto, HttpServletRequest request) {
 		IRetail.ReturnCodes returnCode = service.addProduct(productDto);
 		if (returnCode == IRetail.ReturnCodes.OK) {
 			return ResponseEntity.ok().build();
 		}else if (returnCode == IRetail.ReturnCodes.INPUT_OBJECT_IS_NULL) {
 			return ResponseEntity.badRequest().build();
 		}
-		return new ResponseEntity<String>(returnCode.toString(), HttpStatus.CONFLICT);
+		HttpStatus returnStatus = HttpStatus.CONFLICT; 
+		return ResponseEntity.status(returnStatus).body(
+				ErrorResponseDto.builder()
+				.status(returnStatus.value())
+				.error(returnStatus.name())
+				.message(returnCode.toString())
+				.path(request.getRequestURI())
+				.build());
 	}
 
 	@PutMapping(value = ApiConstants.PRODUCT_ENDPOINT)
@@ -209,19 +215,36 @@ public class Controller {
 	}
 
 	@GetMapping(value = ApiConstants.CHECK_ID_ENDPOINT)
-	CheckDto getCheck(@PathVariable String id) {
-		return service.getCheck(id);
+	ResponseEntity<?> getCheck(@PathVariable String id, HttpServletRequest request) {
+		CheckDto checkDto = service.getCheck(id);
+		if (checkDto==null) {
+			HttpStatus returnStatus = HttpStatus.CONFLICT; 
+			return ResponseEntity.status(returnStatus).body(
+					ErrorResponseDto.builder()
+					.status(returnStatus.value())
+					.error(returnStatus.name())
+					.message(ReturnCodes.CHECK_ID_NOT_FOUND.toString())
+					.path(request.getRequestURI())
+					.build());
+		}
+		return ResponseEntity.ok(checkDto); 
 	}
 
 	@PostMapping(value = ApiConstants.CHECK_ENDPOINT)
 	ResponseEntity<?> addCheck(@RequestBody CheckDto checkDto) {
 		log.debug("checkDto: {}", checkDto);
-		IRetail.ReturnCodes result = service.addCheck(checkDto);
-		log.debug("Result add check: {}", result);
-		if (result == IRetail.ReturnCodes.OK) {
-			return ResponseEntity.ok().build();
+		DtoWithRetCode<String> dtoWithRetCode = service.addCheck(checkDto);
+		if (dtoWithRetCode==null) {
+			return ResponseEntity.badRequest().build();
 		}
-		return ResponseEntity.badRequest().build();
+		IRetail.ReturnCodes result = dtoWithRetCode.getReturnCode();
+		log.debug("Result add check: {}", result);
+		if (result != IRetail.ReturnCodes.OK) {
+			return ResponseEntity.badRequest().build();
+		}
+		return ResponseEntity.status(HttpStatus.CREATED)
+				.body(ResponseDto.builder().type(ApiConstants.TYPE_CHECK_ID)
+						.payload(dtoWithRetCode.getDto()).build());
 	}
 	/***************************************************
 	 * REPORTS

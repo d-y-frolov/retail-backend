@@ -1,5 +1,7 @@
 package com.retail.backoffice.api;
 
+import java.time.LocalDateTime;
+
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,9 +12,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class ErrorResponseDto {
-	private String timestamp;
+	@Builder.Default
+	private String timestamp=LocalDateTime.now().toString();
 	private int status;
-	private String error;
-	private String message;
-	private String path;
+	@Builder.Default
+	private String error="";
+	@Builder.Default
+	private String message="";
+	@Builder.Default
+	private String path="";
 }

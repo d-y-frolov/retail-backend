@@ -15,6 +15,7 @@ import com.retail.backoffice.api.CashDto;
 import com.retail.backoffice.api.CheckDetailDto;
 import com.retail.backoffice.api.CheckDto;
 import com.retail.backoffice.api.DateSumDto;
+import com.retail.backoffice.api.DtoWithRetCode;
 import com.retail.backoffice.api.GroupDto;
 import com.retail.backoffice.api.ProductDto;
 import com.retail.backoffice.api.ReportCashSaleDto;
@@ -147,8 +148,11 @@ public class RetailService implements IRetail {
 	@Transactional
 	@Override
 	public ReturnCodes addProduct(ProductDto productDto) {
-		if (productDto == null || productDto.getGroupId() == null || productDto.getUnitId() == null) {
+		if (productDto == null ||productDto.getId() == null || productDto.getGroupId() == null || productDto.getUnitId() == null) {
 			return ReturnCodes.INPUT_OBJECT_IS_NULL;
+		}
+		if (productDto.getId().isBlank()/* || productDto.getGroupId().isBlank() || productDto.getUnitId().isBlank()*/) {
+			return ReturnCodes.PRODUCT_ID_EMPTY;
 		}
 		if (productRepo.existsById(productDto.getId())) {
 			return ReturnCodes.PRODUCT_ID_ALREADY_EXISTS;
@@ -353,25 +357,29 @@ public class RetailService implements IRetail {
 
 	@Transactional
 	@Override
-	public ReturnCodes addCheck(CheckDto checkDto) {
+	public DtoWithRetCode<String> addCheck(CheckDto checkDto) {
 		if (checkDto == null || checkDto.getCash() == null || checkDto.getDetails() == null) {
-			return ReturnCodes.INPUT_OBJECT_IS_NULL;
+//			return ReturnCodes.INPUT_OBJECT_IS_NULL;
+			return new DtoWithRetCode<>(null, ReturnCodes.INPUT_OBJECT_IS_NULL);
 		}
 		Cash cash = cashRepo.findById(checkDto.getCash().getId()).orElse(null);
 		if (cash == null) {
 			log.debug("CASH_ID: {}", checkDto.getCash().getId() );
-			return ReturnCodes.CASH_NOT_FOUND;
+//			return ReturnCodes.CASH_NOT_FOUND;
+			return new DtoWithRetCode<>(null, ReturnCodes.CASH_NOT_FOUND);
 		}
 		String checkId = getCheckIdAndSetLastCheckNumber(cash);
 		checkDto.setId(checkId);
 		if (checkRepo.existsById(checkDto.getId())) {
-			return ReturnCodes.CHECK_ID_ALREADY_EXISTS;
+//			return ReturnCodes.CHECK_ID_ALREADY_EXISTS;
+			return new DtoWithRetCode<>(null, ReturnCodes.CHECK_ID_ALREADY_EXISTS);
 		}
 		Checks check = checkRepo.save(mapCheckDtoToCheck(checkDto));
 		List<CheckDetail> details = mapListCheckDetailToListDetail(checkDto.getDetails(), check);
 		changeProductRemainders(details, false);
 		detailRepo.saveAll(details);
-		return ReturnCodes.OK;
+//		return ReturnCodes.OK;
+		return new DtoWithRetCode<>(checkId, ReturnCodes.OK);
 	}
 
 	private String getCheckIdAndSetLastCheckNumber(Cash cash) {

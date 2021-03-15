@@ -96,9 +96,6 @@ class BackofficeApplicationTests {
 	
 	@BeforeAll
 	void beforeAll() {
-		
-		assertNotNull(controller);		
-		
 		groupURL = String.format("%s:%d%s", BASE_URL, port, GROUP_ENDPOINT); 
 		unitURL = String.format("%s:%d%s", BASE_URL, port, UNIT_ENDPOINT); 
 		productURL= String.format("%s:%d%s", BASE_URL, port, PRODUCT_ENDPOINT); 
@@ -149,17 +146,17 @@ class BackofficeApplicationTests {
 				HttpMethod.POST, new HttpEntity<CheckDto>(checkDto ),
 				Object.class
 				);
-		assertEquals(HttpStatus.OK, response.getStatusCode());
+		assertEquals(HttpStatus.CREATED, response.getStatusCode());
 	}
 	
 	@BeforeEach
 	void beforeEach() {
 	}
 
-//	@Test
-//	void contextLoads() {
-//		assertNotNull(controller);		
-//	}
+	@Test
+	void contextLoads() {
+		assertNotNull(controller);		
+	}
 	
 	/****
 	 *    PRODUCT GROUPS

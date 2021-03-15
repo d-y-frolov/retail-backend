@@ -45,10 +45,6 @@ public interface IRetail {
 
 	ReturnCodes addGroup(GroupDto groupDto);
 
-	ReturnCodes updateGroup(GroupDto groupDto);
-
-	ReturnCodes removeGroup(GroupDto groupDto);
-
 	/******************************************************
 	 * UNITS
 	 ******************************************************/
@@ -58,10 +54,6 @@ public interface IRetail {
 
 	ReturnCodes addUnit(UnitDto unitDto);
 
-	ReturnCodes updateUnit(UnitDto unitDto);
-
-	ReturnCodes removeUnit(UnitDto unitDto);
-
 	/******************************************************
 	 * CASH REGISTERS
 	 ******************************************************/
@@ -70,10 +62,6 @@ public interface IRetail {
 	CashDto getCacheRegister(int id);
 
 	ReturnCodes addCacheRegister(CashDto cashDto);
-
-	ReturnCodes updateCacheRegister(CashDto cashDto);
-	
-	ReturnCodes removeCacheRegister(CashDto cashDto);
 	
 	/******************************************************
 	 * CHECKS
@@ -82,17 +70,13 @@ public interface IRetail {
 
 	CheckDto getCheck(String id);
 
-//	ReturnCodes addCheck(CheckDto checkDto);
 	DtoWithRetCode<String> addCheck(CheckDto checkDto);
-
-	ReturnCodes updateCheck(CheckDto checkDto);
-	
-	ReturnCodes removeCheck(CheckDto checkDto);
 
 	/******************************************************
 	 * REPORTS
 	 ******************************************************/
 	List<ReportCashSaleDto> getReportCashSale(String startDate, String endDate);
+
 	List<DateSumDto> getReportSalesSumDto(String startDate, String endDate);
 	
 }

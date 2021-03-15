@@ -94,18 +94,6 @@ public class RetailService implements IRetail {
 		return ReturnCodes.OK;
 	}
 
-	@Override
-	public ReturnCodes updateGroup(GroupDto groupDto) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ReturnCodes removeGroup(GroupDto groupDto) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	/*************************************
 	 * PRODUCTS
 	 *************************************/
@@ -250,18 +238,6 @@ public class RetailService implements IRetail {
 		return Unit.builder().id(unitDto.getId()).name(unitDto.getName()).pieceUnit(unitDto.isPieceUnit()).build();
 	}
 
-	@Override
-	public ReturnCodes updateUnit(UnitDto unitDto) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ReturnCodes removeUnit(UnitDto unitDto) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	/**************************************************
 	 * CASHES
 	 ***************************************************/
@@ -302,18 +278,6 @@ public class RetailService implements IRetail {
 		return Cash.builder().id(cashDto.getId()).name(cashDto.getName())
 				.info(cashDto.getInfo()).lastCheckNumber(cashDto.getLastCheckNumber())
 				.checkPrefix(cashDto.getCheckPrefix()).build();
-	}
-
-	@Override
-	public ReturnCodes updateCacheRegister(CashDto cashDto) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ReturnCodes removeCacheRegister(CashDto cashDto) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	/**************************************************
@@ -359,26 +323,22 @@ public class RetailService implements IRetail {
 	@Override
 	public DtoWithRetCode<String> addCheck(CheckDto checkDto) {
 		if (checkDto == null || checkDto.getCash() == null || checkDto.getDetails() == null) {
-//			return ReturnCodes.INPUT_OBJECT_IS_NULL;
 			return new DtoWithRetCode<>(null, ReturnCodes.INPUT_OBJECT_IS_NULL);
 		}
 		Cash cash = cashRepo.findById(checkDto.getCash().getId()).orElse(null);
 		if (cash == null) {
 			log.debug("CASH_ID: {}", checkDto.getCash().getId() );
-//			return ReturnCodes.CASH_NOT_FOUND;
 			return new DtoWithRetCode<>(null, ReturnCodes.CASH_NOT_FOUND);
 		}
 		String checkId = getCheckIdAndSetLastCheckNumber(cash);
 		checkDto.setId(checkId);
 		if (checkRepo.existsById(checkDto.getId())) {
-//			return ReturnCodes.CHECK_ID_ALREADY_EXISTS;
 			return new DtoWithRetCode<>(null, ReturnCodes.CHECK_ID_ALREADY_EXISTS);
 		}
 		Checks check = checkRepo.save(mapCheckDtoToCheck(checkDto));
 		List<CheckDetail> details = mapListCheckDetailToListDetail(checkDto.getDetails(), check);
 		changeProductRemainders(details, false);
 		detailRepo.saveAll(details);
-//		return ReturnCodes.OK;
 		return new DtoWithRetCode<>(checkId, ReturnCodes.OK);
 	}
 
@@ -409,22 +369,10 @@ public class RetailService implements IRetail {
 			throws InvalidParameterException {
 		Product product = productRepo.findById(detailDto.getProductDto().getId()).orElse(null);
 		if (product == null) {
-			throw new InvalidParameterException("PRODUCT NOT FOUND");
+			throw new InvalidParameterException(IRetail.ReturnCodes.INPUT_OBJECT_IS_NULL.toString());
 		}
 		return CheckDetail.builder().check(check).product(product).price(detailDto.getPrice())
 				.quantity(detailDto.getQuantity()).sum(detailDto.getSum()).build();
-	}
-
-	@Override
-	public ReturnCodes updateCheck(CheckDto checkDto) {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public ReturnCodes removeCheck(CheckDto checkDto) {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	/**************************************************

@@ -63,7 +63,10 @@ public class RetailService implements IRetail {
 	 *************************************/
 	@Override
 	public GroupDto getGroup(String id) {
-		Groups group = groupRepo.findById(id).orElse(null);
+		if (id == null || id.isBlank()) {
+			return null;
+		}
+		Groups group = groupRepo.findById(id.trim()).orElse(null);
 		if (group == null)
 			return null;
 		return GroupDto.builder().id(group.getId()).name(group.getName()).build();
@@ -84,10 +87,10 @@ public class RetailService implements IRetail {
 	@Transactional
 	@Override
 	public ReturnCodes addGroup(GroupDto groupDto) {
-		if (groupDto == null || groupDto.getId()==null || groupDto.getId().isEmpty()) {
+		if (groupDto == null || groupDto.getId()==null || groupDto.getId().isBlank()) {
 			return ReturnCodes.INPUT_OBJECT_IS_NULL;
 		}
-		if (groupRepo.existsById(groupDto.getId())) {
+		if (groupRepo.existsById(groupDto.getId().trim())) {
 			return ReturnCodes.GROUP_ALREADY_EXISTS;
 		}
 		groupRepo.save(new Groups(groupDto.getId(), groupDto.getName()));
@@ -99,7 +102,10 @@ public class RetailService implements IRetail {
 	 *************************************/
 	@Override
 	public ProductDto getProduct(String id) {
-		Product product = productRepo.findById(id).orElse(null);
+		if (id==null || id.isBlank()) {
+			return null;
+		}
+		Product product = productRepo.findById(id.trim()).orElse(null);
 		if (product == null) {
 			return null;
 		}
@@ -114,7 +120,7 @@ public class RetailService implements IRetail {
 	@Override
 	public List<ProductDto> getSearchedProducts(String searchString) {
 		List<Product> products = null;
-		if (searchString==null || searchString.isEmpty()) {
+		if (searchString==null || searchString.isBlank()) {
 			products = productRepo.findAll();
 		}
 		if (searchString.matches("\\d+")) {
@@ -139,9 +145,10 @@ public class RetailService implements IRetail {
 		if (productDto == null ||productDto.getId() == null || productDto.getGroupId() == null || productDto.getUnitId() == null) {
 			return ReturnCodes.INPUT_OBJECT_IS_NULL;
 		}
-		if (productDto.getId().isBlank()/* || productDto.getGroupId().isBlank() || productDto.getUnitId().isBlank()*/) {
+		if (productDto.getId().isBlank()) {
 			return ReturnCodes.PRODUCT_ID_EMPTY;
 		}
+		productDto.setId(productDto.getId().trim());
 		if (productRepo.existsById(productDto.getId())) {
 			return ReturnCodes.PRODUCT_ID_ALREADY_EXISTS;
 		}
@@ -153,7 +160,6 @@ public class RetailService implements IRetail {
 		if (unit == null) {
 			return ReturnCodes.UNIT_NOT_FOUND;
 		}
-
 		productRepo.save(mapProductDtoToProduct(productDto, groups, unit));
 		return ReturnCodes.OK;
 	}
@@ -170,6 +176,7 @@ public class RetailService implements IRetail {
 		if (productDto == null || productDto.getGroupId() == null || productDto.getUnitId() == null) {
 			return ReturnCodes.INPUT_OBJECT_IS_NULL;
 		}
+		productDto.setId(productDto.getId().trim());
 		if (!productRepo.existsById(productDto.getId())) {
 			return ReturnCodes.PRODUCT_ID_NOT_FOUND;
 		}
@@ -189,6 +196,10 @@ public class RetailService implements IRetail {
 	@Transactional
 	@Override
 	public ReturnCodes removeProduct(String id) {
+		if (id==null) {
+			return ReturnCodes.INPUT_OBJECT_IS_NULL;
+		}
+		id = id.trim();
 		if (!productRepo.existsById(id)) {
 			return ReturnCodes.PRODUCT_ID_NOT_FOUND;
 		}

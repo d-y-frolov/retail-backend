@@ -243,7 +243,7 @@ public class Controller {
 			return ResponseEntity.badRequest().build();
 		}
 		return ResponseEntity.status(HttpStatus.CREATED)
-				.body(ResponseDto.builder().type(ApiConstants.TYPE_CHECK_ID)
+				.body(ResponseDto.builder().type(ApiConstants.TYPE_CHECK_ID_AND_DATETIME)
 						.payload(dtoWithRetCode.getDto()).build());
 	}
 	/***************************************************

@@ -15,4 +15,5 @@ public interface ApiConstants {
 	String REPORT_GROUP_SALES_ENDPOINT = "/report/group-sales";
 	String TYPE_CHECK_ID = "CheckId";
 	String TYPE_CHECK = "Check";
+	String TYPE_CHECK_ID_AND_DATETIME = "Check Id, Date, Time";
 }

@@ -5,7 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -64,7 +65,7 @@ class BackofficeApplicationTests {
 	private static final double PRODUCT_PRICE = 100.99;
 	private static final double PRODUCT_TAX = 17.;
 	private static final String CHECK_ID_WRONG = "CHECK_ID_WRONG";
-	private static final LocalDateTime CHECK_DATETIME = LocalDateTime.now();
+	private static final ZonedDateTime CHECK_DATETIME = ZonedDateTime.now(ZoneId.systemDefault());
 	private static final double CHECK_PRICE = PRODUCT_PRICE;
 	private static final double CHECK_QUANTITY = 1;
 	private static final int CASH_ID = 1; 

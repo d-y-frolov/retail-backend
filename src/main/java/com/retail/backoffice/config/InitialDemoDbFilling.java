@@ -1,6 +1,7 @@
 package com.retail.backoffice.config;
 
-import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -70,13 +71,13 @@ public void FillDemoDb() {
 	details.add(CheckDetailDto.builder().productDto(products[i]).price(products[i].getPrice()).quantity(QUANTITY).sum(calcNewDetailSum(products[i])).build());
 	int minusDays = INITIAL_DAYS_MINUS;
 	service.addCheck(CheckDto.builder()
-			.cash(cashes[1]).dateTime(LocalDateTime.now().minusDays(minusDays)).sum(getDetailsSum(details)).details(details).build() );
+			.cash(cashes[1]).dateTime(ZonedDateTime.now(ZoneId.of("UTC")).minusDays(minusDays)).sum(getDetailsSum(details)).details(details).build() );
 	minusDays--;
 	int detailIndex = 0;
 	details.get(detailIndex).setQuantity(details.get(detailIndex).getQuantity()+4);
 	details.get(detailIndex).setSum( calcDetailSum( details.get(detailIndex) ) );
 	service.addCheck(CheckDto.builder()
-			.cash(cashes[1]).dateTime(LocalDateTime.now().minusDays(minusDays)).sum(getDetailsSum(details)).details(details).build() );
+			.cash(cashes[1]).dateTime(ZonedDateTime.now(ZoneId.of("UTC")).minusDays(minusDays)).sum(getDetailsSum(details)).details(details).build() );
 
 	minusDays--;
 	details.get(detailIndex).setQuantity(details.get(detailIndex).getQuantity()-3);
@@ -85,20 +86,20 @@ public void FillDemoDb() {
 	details.get(detailIndex).setQuantity(details.get(detailIndex).getQuantity()+1);
 	details.get(detailIndex).setSum( calcDetailSum( details.get(detailIndex) ) );
 	service.addCheck(CheckDto.builder()
-			.cash(cashes[1]).dateTime(LocalDateTime.now().minusDays(minusDays)).sum(getDetailsSum(details)).details(details).build() );
+			.cash(cashes[1]).dateTime(ZonedDateTime.now(ZoneId.of("UTC")).minusDays(minusDays)).sum(getDetailsSum(details)).details(details).build() );
 	i=3;
 	details.add(CheckDetailDto.builder().productDto(products[i]).price(products[i].getPrice()).quantity(QUANTITY).sum(calcNewDetailSum(products[i])).build());
 	i=4;
 	details.add(CheckDetailDto.builder().productDto(products[i]).price(products[i].getPrice()).quantity(QUANTITY).sum(calcNewDetailSum(products[i])).build());
 	minusDays--;
 	service.addCheck(CheckDto.builder()
-			.cash(cashes[1]).dateTime(LocalDateTime.now().minusDays(minusDays)).sum(getDetailsSum(details)).details(details).build() );
+			.cash(cashes[1]).dateTime(ZonedDateTime.now(ZoneId.of("UTC")).minusDays(minusDays)).sum(getDetailsSum(details)).details(details).build() );
 	minusDays--;
 	detailIndex = 0;
 	details.get(detailIndex).setQuantity(details.get(detailIndex).getQuantity()-1);
 	details.get(detailIndex).setSum( calcDetailSum( details.get(detailIndex) ) );
 	service.addCheck(CheckDto.builder()
-			.cash(cashes[1]).dateTime(LocalDateTime.now().minusDays(minusDays)).sum(getDetailsSum(details)).details(details).build() );
+			.cash(cashes[1]).dateTime(ZonedDateTime.now(ZoneId.of("UTC")).minusDays(minusDays)).sum(getDetailsSum(details)).details(details).build() );
 	log.debug("DB Initial filling. Done");
 }
 private double calcNewDetailSum(ProductDto productDto) {

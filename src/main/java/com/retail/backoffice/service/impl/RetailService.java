@@ -2,6 +2,8 @@ package com.retail.backoffice.service.impl;
 
 import java.security.InvalidParameterException;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -345,7 +347,7 @@ public class RetailService implements IRetail {
 		String checkId = getCheckIdAndSetLastCheckNumber(cash);
 		checkDto.setId(checkId);
 		if (checkDto.getDateTime()==null) {
-			checkDto.setDateTime(LocalDateTime.now());
+			checkDto.setDateTime(ZonedDateTime.now(ZoneId.of("UTC")));
 		}
 		if (checkRepo.existsById(checkDto.getId())) {
 			return new DtoWithRetCode<>(null, ReturnCodes.CHECK_ID_ALREADY_EXISTS);
@@ -354,7 +356,8 @@ public class RetailService implements IRetail {
 		List<CheckDetail> details = mapListCheckDetailToListDetail(checkDto.getDetails(), check);
 		changeProductRemainders(details, false);
 		detailRepo.saveAll(details);
-		return new DtoWithRetCode<>(checkId+","+checkDto.getDateTime().toString(), ReturnCodes.OK);
+		return new DtoWithRetCode<>(checkId+","+checkDto.getDateTime().toString().substring(0, 30)
+				, ReturnCodes.OK);
 	}
 
 	private String getCheckIdAndSetLastCheckNumber(Cash cash) {

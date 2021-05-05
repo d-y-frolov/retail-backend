@@ -356,7 +356,7 @@ public class RetailService implements IRetail {
 		List<CheckDetail> details = mapListCheckDetailToListDetail(checkDto.getDetails(), check);
 		changeProductRemainders(details, false);
 		detailRepo.saveAll(details);
-		return new DtoWithRetCode<>(checkId+","+checkDto.getDateTime().toString().split("[")[0]
+		return new DtoWithRetCode<>(checkId+","+checkDto.getDateTime().toString().split("\\[")[0]
 				, ReturnCodes.OK);
 	}
 
